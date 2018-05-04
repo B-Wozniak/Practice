@@ -1,62 +1,119 @@
+// linked list stack implementation
 #include <stdio.h>
 #include <stdlib.h>
 
-void reverse(char * buffer, int length)
-{
-  int i;
-  char temp;
+/*
+ * 1st issue:
+ * printing to console not matched with _stacktype: printf("%d"...),
+ * works only for integer types
+ *
+ * 2nd issue:
+ * works only for 1 stack - only 1 stack size counter
+ */
 
-  for (i = 0; i < (length / 2); i++)
+#define uint8 unsigned char
+
+#define _stacksize 160  // stack size in bytes
+#define _nodesize sizeof(TNode)
+#define _stacktype unsigned int
+unsigned int stack_actual_size;
+
+#define _IsEmpty(TNode) (TNode->next != NULL ? 0 : 1)
+#define _IsFull(actual_size) (actual_size > _stacksize || actual_size + _nodesize > _stacksize ? 1 : 0)
+
+typedef struct TNode
+{
+  _stacktype data;
+  struct TNode *next;
+}TNode;
+
+void StackPush(TNode **head, _stacktype data)
+{
+  if (_IsFull(stack_actual_size))
   {
-    temp = buffer[i];
-    buffer[i] = buffer[length - 1 - i];
-    buffer[length - 1 - i] = temp;
+    printf("Push canceled ! This push will cause stack overflow!\n");
+    return;
+  }
+  else
+  {
+    // allocate memory for new node
+    TNode *temp = (TNode *) malloc(sizeof(TNode));
+    stack_actual_size += _nodesize;
+
+    temp->data = data;
+    if (!*head)  // if empty
+      temp->next = NULL;
+    else
+      temp->next = *head;
+
+    *head = temp;
+    printf("%d pushed onto stack\n", (*head)->data);
   }
 }
 
-int mystrlen(char * buffer)
+void StackPop(TNode **head)
 {
-  return (*buffer != '\0' ? 1 + mystrlen(buffer + 1) : 0);
+  if (!*head) // if empty
+  {
+    printf("stack is empty !\n");
+    return;
+  }
+  else
+  {
+    TNode * temp = *head;
+    *head = (*head)->next;
+    printf("%d poped out of the stack\n",temp->data);
+    free(temp);
+    stack_actual_size -= _nodesize;
+  }
 }
 
-char * itoa(int num, char * buffer, int base)
+void StackTop(TNode *head)
 {
-  unsigned char i = 0;
-  unsigned char isnegative = 0;
-  char temp;
+  if (!head) // if empty
+    printf("stack is empty !\n");
+  else
+    printf("Top of the stack: %d\n", head->data);
+}
 
-  // sprawdzamy czy liczba jest ujemna
-  if (num < 0)
+void StackDisplay(TNode *head)
+{
+  if (!head) // if empty
   {
-    isnegative = 1;
-    num = -num;
+    printf("stack is empty !\n");
+    return;
   }
 
-  // jedziemy od ostatniej liczby
-  while (num)
+  while (head) // display till head == NULL pointer
   {
-    temp = num % base;
-    buffer[i++] = (temp > 9 ? temp - 10 + 'a' : temp + '0');
-    num /= base;
+    printf("%d\n", head->data);
+    head = head->next;
   }
-
-  // dopisz '-' jesli liczba ujemna i podstawa = 10
-  if (base == 10 && isnegative)
-    buffer[i++] = '-';
-
-  // dopisz null character na koncu
-  buffer[i] = '\0';
-
-  // odwroc string
-  reverse(buffer, mystrlen(buffer));
-
-  return buffer;
 }
 
 int main()
 {
-  char str[100];
+  TNode *stack_head = NULL;
+  int i;
 
-  printf("%s", itoa(5, str, 2));
+  StackPop(&stack_head);
+  StackDisplay(stack_head);
+  StackTop(stack_head);
+  for (i = 0; i < 10; i++)
+    StackPush(&stack_head, 10 * i);
+
+//  StackDisplay(stack_head);
+
+  StackTop(stack_head);
+  StackPush(&stack_head, 77);
+  StackTop(stack_head);
+  StackPop(&stack_head);
+  StackPop(&stack_head);
+  StackPop(&stack_head);
+  StackPush(&stack_head, 77);
+  StackTop(stack_head);
+  StackPop(&stack_head);
+  StackTop(stack_head);
+
   return 0;
 }
